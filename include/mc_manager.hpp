@@ -6,31 +6,42 @@
 class mc_manager
 {
 private:
-  ising system;
-  double temperature;
-
   const unsigned int FREEZELIM;
-  const double TEMPFACTOR;
   const unsigned int SIZEFACTOR;
-  const double MINPERCENT;
-  const unsigned int CUTOFF;
   const unsigned int Nbar;
+  const double CUTOFF; 
+  const double TEMPFACTOR;
+  const double MINPERCENT;
 
   unsigned int trial;
   unsigned int change;
   unsigned int freeze;
 
+  const unsigned int seed;
+  boost::mt19937 rng;
+  boost::variate_generator<boost::mt19937&, boost::uniform_real<>> random_uniform;
+  boost::variate_generator<boost::mt19937&, boost::uniform_smallint<>> random_int;
+  
+  ising system;
+  double temperature;  
+
   double bound;
   std::vector<bool> argbound;
 
-  boost::mt19937 rng;
-  boost::variate_generator<boost::mt19937&, boost::uniform_real<>> random_uniform;
+  unsigned int counter;
+  
+  double init_temperature(const options& p) const;
   
 public:
-  mc_manager(options p);
+  mc_manager(const options& p);
   ~mc_manager();
 
   void update();
-  void search();
+  std::pair<double, std::vector<bool>> search();
+
+  unsigned int count() const;
   
+  std::pair<double, std::vector<bool>> all_search() const;
+  
+  friend std::ostream& operator<<(std::ostream& os, const mc_manager& obj);
 };

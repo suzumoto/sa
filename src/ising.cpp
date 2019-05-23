@@ -59,8 +59,34 @@ ising::ising(const std::vector<bool> spins, boost::mt19937& eng):
   }
 }
 
+double ising::cost(const std::vector<bool>& state) const{
+  assert(state.size() == configuration.size());
+  double value = 0.0;
+  for(unsigned int i = 0; i < state.size(); ++i){
+    for(unsigned int j = 0; j <= i; ++j){
+      if(state[i] && state[j]) value += connects[i][j];
+    }
+  }
+  return value;
+}
+
+void ising::incliment(std::vector<bool>& state) const{
+  for(unsigned int i = 0; i < state.size(); ++i){
+    if(state[i]) state[i] = false;
+    else {
+      state[i] = true;
+      break;
+    }
+  }
+}
+
 // destructor
 ising::~ising(){}
+
+// extract inner state/configuration
+std::vector<bool> ising::state() const{
+  return configuration;
+}
 
 // objective/cost function
 double ising::cost() const{
@@ -92,6 +118,21 @@ void ising::flip(const unsigned int site){
   configuration[site] = !configuration[site];
 }
 
+std::pair<double, std::vector<bool>> ising::all_search() const{
+  std::vector<bool> state(configuration.size(),false);
+  std::vector<bool> argopt(configuration.size(),false);
+  double opt_value = cost(state);
+  for(unsigned long long int i = 1; i < (1llu << state.size()); ++i){
+    incliment(state);
+    double current_cost = cost(state);
+    if(current_cost < opt_value){
+      opt_value = current_cost;
+      argopt = state;
+    }
+  }
+  return std::pair<double, std::vector<bool>>(opt_value, argopt);
+}
+
 // output for debug
 std::ostream& operator<<(std::ostream& os, const ising& obj){
   os << "====== configuration ======" << std::endl;
@@ -99,12 +140,15 @@ std::ostream& operator<<(std::ostream& os, const ising& obj){
     os << (obj.configuration[i] ? "1 " : "0 ");
   }
   os << std::endl << std::endl;
+  return os;
+}
+
+void ising::show_interaction(std::ostream& os = std::cout) const{
   os << "====== interaction ======" << std::endl;
-  for(unsigned int i = 0; i < obj.connects.size(); ++i){
-    for(unsigned int j = 0; j < obj.connects[i].size(); ++j){
-      os << obj.connects[i][j] << " ";
+  for(unsigned int i = 0; i < connects.size(); ++i){
+    for(unsigned int j = 0; j < connects[i].size(); ++j){
+      os << connects[i][j] << " ";
     }
     os << std::endl;
   }
-  return os;
 }
